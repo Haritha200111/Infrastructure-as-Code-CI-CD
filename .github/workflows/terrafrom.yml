@@ -1,11 +1,6 @@
 name: Terraform Manual Approval CI/CD
 
-# on:
-#   workflow_dispatch:
-#     inputs:
-#       confirm_apply:
-#         description: "Type YES to approve and apply Terraform changes"
-#         required: true
+
 
 on:
   push:
