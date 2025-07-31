@@ -1,7 +1,5 @@
 name: Terraform Manual Approval CI/CD
 
-
-
 on:
   push:
     branches:
