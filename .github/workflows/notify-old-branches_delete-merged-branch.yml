@@ -3,7 +3,7 @@ name: Notify Old Branches & Delete Merged Ones
 on:
   schedule:
     - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
-  workflow_dispatch:
+  workflow_dispatch:      # Manual trigger support
 
 jobs:
   manage-branches:
@@ -16,7 +16,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const defaultBranch = 'main';  // change if needed
+            const defaultBranch = 'main';  // Change if your repo uses another default
             const protectedBranches = ['main', 'master', 'development'];
             const cutoffDays = 90;
             const now = new Date();
@@ -50,24 +50,16 @@ jobs:
                   oldBranches.push(`${name} (last updated ${Math.floor(ageInDays)} days ago)`);
                 }
 
-                // Check if merged into default branch
-                let isMerged = false;
-                try {
-                  const compare = await github.rest.repos.compareCommits({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    base: defaultBranch,
-                    head: name,
-                  });
+                //  Check if branch was merged via PR
+                const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: commit.data.sha
+                });
 
-                  if (compare.data.status === 'ahead') {
-                    isMerged = true;
-                  }
-                } catch (err) {
-                  console.log(`Could not compare ${name} with ${defaultBranch}: ${err.message}`);
-                }
+                const mergedPR = prs.data.find(pr => pr.merged_at !== null);
 
-                if (isMerged) {
+                if (mergedPR) {
                   await github.rest.git.deleteRef({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -83,7 +75,7 @@ jobs:
 
             core.setOutput('oldBranches', oldBranches.join('\n') || 'None');
             core.setOutput('deletedBranches', deletedBranches.join('\n') || 'None');
-      
+
       - name: Send Email Report
         if: always()
         uses: dawidd6/action-send-mail@v3
@@ -94,11 +86,11 @@ jobs:
           password: ${{ secrets.EMAIL_SMTP_PASSWORD }}
           subject: "Branch Cleanup Report for ${{ github.repository }}"
           to: haritharavichandrann@gmail.com
-          from: GitHub Actions <harithavedhavalli@gmail.com>
+          from: harithavedhavalli@gmail.com
           body: |
-            ✅ Branch Cleanup Report for ${{ github.repository }}
+            Branch Cleanup Report for ${{ github.repository }}
 
-            🔸 Branches older than 90 days:
+              Branches older than 90 days:
             ${{ steps.process_branches.outputs.oldBranches }}
 
             🗑️ Deleted merged branches:
