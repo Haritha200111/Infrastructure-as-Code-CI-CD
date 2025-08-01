@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
   workflow_dispatch:      # Manual trigger support
+permissions:
+  contents: write         # needed to delete branches
+  pull-requests: read     # needed to check if a branch is merged via PR
+  issues: read            # (optional) in case you expand to issue reporting
+  actions: read           # (optional) if you use GitHub Actions APIs
 
 jobs:
   manage-branches:
