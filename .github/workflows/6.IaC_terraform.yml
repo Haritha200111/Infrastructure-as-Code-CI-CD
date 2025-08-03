@@ -1,6 +1,6 @@
-name: Terraform Manual Approval CI/CD
+name: Terraform Manual Approval CI/CD    # name of the workflow
 
-on:
+on:  # Trigger the workflow manually by dispatch
   workflow_dispatch:
     inputs:
       confirm_apply:
@@ -8,8 +8,8 @@ on:
         required: true
 
 jobs:
-  terraform:
-    name: Deploy Infrastructure
+  terraform: #Job to deploy infrastructure using Terraform
+    name: Deploy Infrastructure   # Name of the Job to deploy infrastructure using Terraform
     runs-on: ubuntu-latest
 
     steps:
@@ -29,16 +29,16 @@ jobs:
           aws-region: us-east-1
 
       - name:  Terraform Init
-        run: terraform init
+        run: cd 6.IaC/terraform_files && terraform init
 
       - name:  Terraform Format Check
-        run: terraform fmt -check
+        run: cd 6.IaC/terraform_files && terraform fmt -check
 
       - name:  Terraform Validate
-        run: terraform validate
+        run: cd 6.IaC/terraform_files && terraform validate
 
       - name:  Terraform Plan
-        run: terraform plan -out=tfplan
+        run: cd 6.IaC/terraform_files && terraform plan -out=tfplan
 
       - name: ⏸ Check Manual Approval Input
         if: inputs.confirm_apply != 'YES'
@@ -47,4 +47,4 @@ jobs:
           exit 1
 
       - name:  Terraform Apply
-        run: terraform apply -auto-approve tfplan
+        run: cd 6.IaC/terraform_files && terraform apply -auto-approve tfplan
