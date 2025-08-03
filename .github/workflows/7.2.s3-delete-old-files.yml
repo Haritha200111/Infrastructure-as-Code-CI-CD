@@ -1,0 +1,37 @@
+name: Delete Old Files from S3
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # Every day at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Delete files older than 7 days
+        run: |
+          BUCKET_NAME=ci-cd-haritha-test-bucket
+          PREFIX=backup-data/
+
+          echo "Fetching files older than 7 days from s3://$BUCKET_NAME/$PREFIX..."
+
+          aws s3api list-objects-v2 --bucket "$BUCKET_NAME" --prefix "$PREFIX" --query 'Contents[?LastModified<=`'"$(date -d '-1 minutes' --utc +%Y-%m-%dT%H:%M:%SZ)"'`].[Key,LastModified]' --output text |
+          while read -r key date; do
+            echo "🗑️ Deleting: $key (Last modified: $date)"
+            aws s3 rm "s3://$BUCKET_NAME/$key"
+          done

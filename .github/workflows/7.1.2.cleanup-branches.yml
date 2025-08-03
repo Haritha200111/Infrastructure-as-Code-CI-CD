@@ -1,0 +1,44 @@
+name: Notify Old Branches & Delete Merged Ones
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  manage-branches:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Important for git history
+
+      - name: Run branch cleanup script
+        id: cleanup
+        run: |
+          chmod +x .github/scripts/cleanup-branches.sh
+          .github/scripts/cleanup-branches.sh
+
+      - name: Send Email Report
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: harithavedhavalli@gmail.com
+          password: ${{ secrets.EMAIL_SMTP_PASSWORD }}
+          subject: "Branch Cleanup Report for ${{ github.repository }}"
+          to: haritharavichandrann@gmail.com
+          from: harithavedhavalli@gmail.com
+          body: |
+            Branch Cleanup Report for ${{ github.repository }}
+
+            Branches older than 90 days:
+            ${{ steps.cleanup.outputs.oldBranches }}
+
+            🗑️ Deleted merged branches:
+            ${{ steps.cleanup.outputs.deletedBranches }}
