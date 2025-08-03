@@ -21,7 +21,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const defaultBranch = 'main';  // Change if your repo uses another default
+            const defaultBranch = 'main';  
             const protectedBranches = ['main', 'master', 'development'];
             const cutoffDays = 90;
             const now = new Date();
