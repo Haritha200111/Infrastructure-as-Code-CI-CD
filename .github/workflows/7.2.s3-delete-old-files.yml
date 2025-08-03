@@ -30,15 +30,12 @@ jobs:
             aws s3 rm "s3://$BUCKET_NAME/$key"
           done
       
-      - name: Notify Slack
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          payload: |
-            {
-              "text": "S3 cleanup job completed successfully."
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "$(jq -n --arg text "*S3 Cleanup Success*\n\n$DELETED_LOG" '{text: $text}')" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify Failure
         if: failure()
