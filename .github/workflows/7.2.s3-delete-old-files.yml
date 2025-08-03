@@ -33,8 +33,9 @@ jobs:
       - name: Notify Slack on Success
         if: success()
         run: |
+          message=" *S3 Cleanup Success*\n\n$(cat deleted_files.txt)"
           curl -X POST -H 'Content-type: application/json' \
-          --data "$(jq -n --arg text "*S3 Cleanup Success*\n\n$DELETED_LOG" '{text: $text}')" \
+          --data "$(printf '{"text": "%s"}' "$message")" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify Failure
