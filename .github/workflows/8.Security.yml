@@ -39,6 +39,8 @@ jobs:
           config: 'auto'
           generateSarif: true
           upload-sarif: true
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
       - name: Build Docker Image
         run: docker build -t go_app_backend:latest ./go_app_backend
@@ -50,7 +52,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-          exit-code: '1'
+          exit-code: '1'  # ❗Fail the build on CRITICAL or HIGH severity
 
       - name: Upload Trivy SARIF Report
         uses: github/codeql-action/upload-sarif@v2
