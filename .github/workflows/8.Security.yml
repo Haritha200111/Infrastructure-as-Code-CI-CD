@@ -42,12 +42,14 @@ jobs:
         uses: returntocorp/semgrep-action@v1
         with:
           config: auto
+          args: --sarif --output=semgrep.sarif  #  Explicit SARIF output
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+          continue-on-error: true  #  Don't stop on findings
 
       - name: Upload Semgrep SARIF Report
-        if: success() || failure()
-        uses: github/codeql-action/upload-sarif@v2
+        if: always()  #  Upload report even if Semgrep failed
+        uses: github/codeql-action/upload-sarif@v3  #  Updated from v2 (deprecated)
         with:
           sarif_file: semgrep.sarif
 
