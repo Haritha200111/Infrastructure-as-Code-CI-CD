@@ -1,0 +1,63 @@
+name: Security CI/CD
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🧾 Checkout code
+      uses: actions/checkout@v3
+
+    - name: 🧰 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: 📦 Install Semgrep & Trivy
+      run: |
+        pip install semgrep
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh
+        sudo apt-get install jq -y
+
+    - name: 🔍 Run Semgrep (SAST)
+      run: |
+        semgrep scan --config p/owasp-top-ten --lang go \
+          --sarif --output semgrep.sarif
+
+    - name: 🐳 Run Trivy (Container Scan)
+      run: |
+        docker build -t myapp:latest .
+        trivy image --severity HIGH,CRITICAL \
+          --format sarif --output trivy.sarif myapp:latest
+
+    - name: 📊 Check SARIF for High Severity Issues
+      run: |
+        check_sarif() {
+          local file=$1
+          local count=$(jq '[.runs[].results[] | select(.level=="error" or .level=="warning")] | length' "$file")
+          echo "Found $count high/critical issues in $file"
+          if [ "$count" -gt 0 ]; then
+            echo "❌ Blocking build due to high severity issues."
+            exit 1
+          fi
+        }
+
+        check_sarif semgrep.sarif
+        check_sarif trivy.sarif
+
+    - name: 📤 Upload Semgrep SARIF
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: semgrep.sarif
+
+    - name: 📤 Upload Trivy SARIF
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: trivy.sarif
