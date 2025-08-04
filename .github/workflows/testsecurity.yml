@@ -61,11 +61,14 @@ jobs:
         check_sarif trivy.sarif
 
     - name: 📤 Upload Semgrep SARIF
+      if: always()
       uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: semgrep.sarif
 
     - name: 📤 Upload Trivy SARIF
+      if: always()
       uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: trivy.sarif
+
