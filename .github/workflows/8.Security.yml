@@ -63,3 +63,8 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: trivy-results.sarif
+
+      - name: Check SARIF file exists
+        run: |
+          ls -lah
+          cat trivy-results.sarif || echo "No SARIF file"
