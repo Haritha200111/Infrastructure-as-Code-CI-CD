@@ -20,9 +20,11 @@ jobs:
       with:
         go-version: '1.20'
 
-    - name: Install Gosec and Semgrep
+    - name: Install Gosec binary and Semgrep
       run: |
-        go install github.com/securego/gosec/v2/cmd/gosec@v2.22.0
+        curl -Lo gosec.tar.gz https://github.com/securego/gosec/releases/download/v2.22.7/gosec_2.22.7_linux_amd64.tar.gz
+        tar -xzf gosec.tar.gz
+        sudo mv gosec /usr/local/bin/
         pip install semgrep
 
     - name: Run Gosec (fail on findings)
