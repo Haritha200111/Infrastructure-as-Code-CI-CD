@@ -33,7 +33,7 @@ jobs:
 
     - name: 🐳 Run Trivy (Container Scan)
       run: |
-        docker build -t myapp:latest .
+        docker build -t myapp:latest ./go_app_backend
         trivy image --severity HIGH,CRITICAL \
           --format sarif --output trivy.sarif myapp:latest
 
