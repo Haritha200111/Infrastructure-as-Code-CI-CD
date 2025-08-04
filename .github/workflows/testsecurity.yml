@@ -23,7 +23,12 @@ jobs:
     - name: 📦 Install Semgrep & Trivy
       run: |
         pip install semgrep
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh
+        sudo apt-get update
+        sudo apt-get install wget apt-transport-https gnupg lsb-release -y
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install trivy -y
         sudo apt-get install jq -y
 
     - name: 🔍 Run Semgrep (SAST)
@@ -31,9 +36,12 @@ jobs:
         semgrep --config "p/owasp-top-ten" \
           --sarif --output semgrep.sarif
 
-    - name: 🐳 Run Trivy (Container Scan)
+    - name: 🐳 Build Docker Image
       run: |
         docker build -t myapp:latest ./go_app_backend
+
+    - name: 🐳 Run Trivy (Container Scan)
+      run: |
         trivy image --severity HIGH,CRITICAL \
           --format sarif --output trivy.sarif myapp:latest
 
