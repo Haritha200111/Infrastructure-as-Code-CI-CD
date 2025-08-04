@@ -39,10 +39,11 @@ jobs:
         run: go test -v ./...
 
       - name: Run Semgrep (Static Analysis)
-        uses: returntocorp/semgrep-action@v1
+        uses: returntocorp/semgrep-action@v2
         with:
           config: 'auto'
-          args: --sarif --output=semgrep.sarif
+          generate-sarif: true
+          output: semgrep.sarif
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
@@ -50,7 +51,6 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: semgrep.sarif
-
 
       - name: Build Docker Image
         run: docker build -t go_app_backend:latest ./go_app_backend
