@@ -1,0 +1,58 @@
+name: Secure Go Build and Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Install dependencies
+        working-directory: go_app_backend
+        run: go mod download
+
+      - name: Run Lint
+        working-directory: go_app_backend
+        run: |
+          go install golang.org/x/lint/golint@latest
+          golint ./...
+
+      - name: Run Tests
+        working-directory: go_app_backend
+        run: go test -v ./...
+
+      - name: Run Semgrep (Static Analysis)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: 'auto'
+          generateSarif: true
+          upload-sarif: true
+
+      - name: Build Docker Image
+        run: docker build -t go_app_backend:latest ./go_app_backend
+
+      - name: Run Trivy Container Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'go_app_backend:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Upload Trivy SARIF Report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
