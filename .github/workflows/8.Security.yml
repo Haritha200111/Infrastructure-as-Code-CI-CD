@@ -22,14 +22,22 @@ jobs:
 
     - name: Install Gosec binary and Semgrep
       run: |
+        # Install Gosec binary
         curl -Lo gosec.tar.gz https://github.com/securego/gosec/releases/download/v2.22.7/gosec_2.22.7_linux_amd64.tar.gz
         tar -xzf gosec.tar.gz
         sudo mv gosec /usr/local/bin/
+        
+        # Install Semgrep
         pip install semgrep
 
+    - name: Download Go modules
+      working-directory: ./go_app_backend
+      run: go mod download
+
     - name: Run Gosec (fail on findings)
+      working-directory: ./go_app_backend
       run: |
-        gosec -severity medium -fmt sarif -out gosec.sarif ./go_app_backend/...
+        gosec -severity medium -fmt sarif -out ../gosec.sarif ./...
 
     - name: Run Semgrep (fail on findings)
       run: |
