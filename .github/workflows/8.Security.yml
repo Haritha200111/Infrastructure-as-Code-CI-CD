@@ -42,10 +42,15 @@ jobs:
         uses: returntocorp/semgrep-action@v1
         with:
           config: 'auto'
-          generateSarif: true
-          upload-sarif: true
+          args: --sarif --output=semgrep.sarif
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      - name: Upload Semgrep SARIF Report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: semgrep.sarif
+
 
       - name: Build Docker Image
         run: docker build -t go_app_backend:latest ./go_app_backend
@@ -63,9 +68,8 @@ jobs:
         run: |
           ls -lah
           cat trivy-results.sarif || echo "No SARIF file"
-          
+
       - name: Upload Trivy SARIF Report
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: trivy-results.sarif
-
