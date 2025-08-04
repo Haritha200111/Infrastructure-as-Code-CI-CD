@@ -20,24 +20,14 @@ jobs:
       with:
         go-version: '1.20'
 
-    - name: Install Gosec binary and Semgrep
+    - name: Install Gosec and Semgrep
       run: |
-        # Install Gosec binary
-        curl -Lo gosec.tar.gz https://github.com/securego/gosec/releases/download/v2.22.7/gosec_2.22.7_linux_amd64.tar.gz
-        tar -xzf gosec.tar.gz
-        sudo mv gosec /usr/local/bin/
-        
-        # Install Semgrep
+        go install github.com/securego/gosec/v2/cmd/gosec@v2.22.0
         pip install semgrep
 
-    - name: Download Go modules
-      working-directory: ./go_app_backend
-      run: go mod download
-
     - name: Run Gosec (fail on findings)
-      working-directory: ./go_app_backend
       run: |
-        gosec -severity medium -fmt sarif -out ../gosec.sarif ./...
+        gosec -severity medium -fmt sarif -out gosec.sarif ./go_app_backend/...
 
     - name: Run Semgrep (fail on findings)
       run: |
@@ -48,7 +38,7 @@ jobs:
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
     - name: Build Docker Image
-      run: docker build -t myapp:latest ./go_app_backend
+      run: docker build -t myapp:latest .
 
     - name: Run Trivy Image Scan (fail on HIGH or CRITICAL)
       run: |
@@ -68,3 +58,13 @@ jobs:
       uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: trivy.sarif
+
+    # # Optional: Upload SARIF files as artifacts for local inspection
+    # - name: Upload SARIF artifacts
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: sarif-files
+    #     path: |
+    #       gosec.sarif
+    #       semgrep.sarif
+    #       trivy.sarif
