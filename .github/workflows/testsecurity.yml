@@ -28,7 +28,7 @@ jobs:
 
     - name: 🔍 Run Semgrep (SAST)
       run: |
-        semgrep scan --config "p/owasp-top-ten"
+        semgrep scan --config "p/owasp-top-ten" \
           --sarif --output semgrep.sarif
 
     - name: 🐳 Run Trivy (Container Scan)
