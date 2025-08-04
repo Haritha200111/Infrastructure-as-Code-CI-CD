@@ -22,7 +22,7 @@ jobs:
 
     - name: Install Gosec and Semgrep
       run: |
-        go install github.com/securego/gosec/v2/cmd/gosec@latest
+        go install github.com/securego/gosec/v2/cmd/gosec@v2.22.0
         pip install semgrep
 
     - name: Run Gosec (fail on findings)
